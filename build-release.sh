@@ -27,11 +27,16 @@ mkdir bin
 for os in ${OSES[@]}; do
 	for arch in ${ARCHS[@]}; do
 		suffix=""
-		if [ "$os" == "windows" ]
+		if [ x"$os" = x"windows" ]
 		then
 			suffix=".exe"
 		fi
-		env CGO_ENABLED=0 GOOS=$os GOARCH=$arch go build -v -ldflags "$LDFLAGS" -gcflags "$GCFLAGS" -o v2ray-plugin_${os}_${arch}${suffix}
+		if [ x"$os" != x"darwin" ]
+		then
+			env GOFLAGS="$GOFLAGS -buildmode=pie" CGO_ENABLED=0 GOOS=$os GOARCH=$arch go build -v -ldflags "$LDFLAGS" -gcflags "$GCFLAGS" -o v2ray-plugin_${os}_${arch}${suffix}
+		else
+			env GOFLAGS="$GOFLAGS" CGO_ENABLED=0 GOOS=$os GOARCH=$arch go build -v -ldflags "$LDFLAGS" -gcflags "$GCFLAGS" -o v2ray-plugin_${os}_${arch}${suffix}
+		fi
 		$upx v2ray-plugin_${os}_${arch}${suffix} >/dev/null
 		tar -zcf bin/v2ray-plugin-${os}-${arch}-$VERSION.tar.gz v2ray-plugin_${os}_${arch}${suffix}
 		$sum bin/v2ray-plugin-${os}-${arch}-$VERSION.tar.gz
